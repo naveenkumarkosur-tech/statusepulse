@@ -1,4 +1,3 @@
-cat > .github/workflows/ci.yml << 'OUTER'
 name: CI Pipeline
 
 on:
@@ -57,12 +56,10 @@ jobs:
             STATUS=$(docker inspect --format='{{.State.Health.Status}}' statuspulse-app-1 2>/dev/null || echo "starting")
             echo "Attempt $i: $STATUS"
             if [ "$STATUS" = "healthy" ]; then
-              echo "App is healthy"
               exit 0
             fi
             sleep 5
           done
-          echo "App never became healthy"
           docker compose ps
           docker compose logs app --tail 80
           exit 1
@@ -83,149 +80,6 @@ jobs:
           name: integration-test-results
           path: test-results.txt
 
-      - name: Show logs on failure
-        if: failure()
-        run: |
-          docker compose logs app --tail 100
-          docker compose logs db --tail 50
-
       - name: Tear down
         if: always()
         run: docker compose down -v
-OUTER
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
-      
-
-
-   
-
-   
-
-
- 
-    
-
-
-     
-    
-
-      
-      
-
-  
-       
-
-    
-        
-          
-          
-
-      
- 
-       
-          
-      
-
-            
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
-      
-
-
-   
-
-   
-
-
- 
-    
-
-
-     
-    
-
-      
-      
-
-  
-       
-
-    
-        
-          
-          
-
-      
- 
-       
-          
-      
-
-            
-
-
