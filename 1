@@ -1,0 +1,13 @@
+- name: Create .env file
+  run: |
+    cat > .env <<EOF
+    DB_HOST=db
+    DB_PORT=5432
+    DB_NAME=statuspulse
+    DB_USER=statuspulse
+    DB_PASSWORD=ci_test_password
+    REDIS_HOST=redis
+    REDIS_PORT=6379
+    REDIS_PASSWORD=ci_redis_password
+    APP_PORT=8000
+    EOF
