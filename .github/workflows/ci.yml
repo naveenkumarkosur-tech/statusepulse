@@ -24,12 +24,11 @@ jobs:
       - name: Lint Python
         run: ruff check app/
 
-      - name: Lint Dockerfile (warnings only, do not fail build)
+      - name: Lint Dockerfile (warnings allowed)
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile
           failure-threshold: error
-          no-fail: false
 
       - name: Create env file
         run: |
@@ -51,24 +50,33 @@ jobs:
       - name: Start full stack
         run: docker compose up -d --build
 
-      - name: Wait for app to be healthy
+      - name: Show containers
+        run: docker compose ps
+
+      - name: Wait for app health endpoint
         run: |
           for i in $(seq 1 60); do
-            STATUS=$(docker inspect --format='{{.State.Health.Status}}' statuspulse-app-1 2>/dev/null || echo "starting")
-            echo "Attempt $i: $STATUS"
-            if [ "$STATUS" = "healthy" ]; then
+            if curl -fsS http://localhost:8000/health > /dev/null 2>&1; then
+              echo "App is healthy after $i attempts"
+              curl -s http://localhost:8000/health
+              echo ""
               exit 0
             fi
+            echo "Attempt $i: app not ready, waiting..."
             sleep 5
           done
+          echo "===== APP NEVER BECAME HEALTHY ====="
           docker compose ps
-          docker compose logs app --tail 80
+          echo "===== APP LOGS ====="
+          docker compose logs app --tail 200
+          echo "===== DB LOGS ====="
+          docker compose logs db --tail 50
           exit 1
 
       - name: Run integration tests
         run: |
           chmod +x tests/test_integration.sh
-          docker run --rm --network statuspulse_statusnet -v ${{ github.workspace }}/tests:/tests curlimages/curl:latest sh /tests/test_integration.sh http://app:8000 | tee test-results.txt
+          ./tests/test_integration.sh http://localhost:8000 | tee test-results.txt
 
       - name: Upload test results
         if: always()
@@ -76,12 +84,14 @@ jobs:
         with:
           name: integration-test-results
           path: test-results.txt
+          if-no-files-found: ignore
 
       - name: Show logs on failure
         if: failure()
         run: |
-          docker compose logs app --tail 100 || true
+          docker compose logs app --tail 200 || true
           docker compose logs db --tail 50 || true
+          docker compose logs redis --tail 50 || true
 
       - name: Tear down
         if: always()
