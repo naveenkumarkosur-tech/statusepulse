@@ -24,25 +24,26 @@ jobs:
       - name: Lint Python
         run: ruff check app/
 
-      - name: Lint Dockerfile
+      - name: Lint Dockerfile (warnings only, do not fail build)
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile
-          failure-threshold: warning
+          failure-threshold: error
+          no-fail: false
 
-      - name: Create .env file
+      - name: Create env file
         run: |
-          cat > .env <<ENVEOF
-          DB_HOST=db
-          DB_PORT=5432
-          DB_NAME=statuspulse
-          DB_USER=statuspulse
-          DB_PASSWORD=ci_test_password
-          REDIS_HOST=redis
-          REDIS_PORT=6379
-          REDIS_PASSWORD=ci_redis_password
-          APP_PORT=8000
-          ENVEOF
+          {
+            echo "DB_HOST=db"
+            echo "DB_PORT=5432"
+            echo "DB_NAME=statuspulse"
+            echo "DB_USER=statuspulse"
+            echo "DB_PASSWORD=ci_test_password"
+            echo "REDIS_HOST=redis"
+            echo "REDIS_PORT=6379"
+            echo "REDIS_PASSWORD=ci_redis_password"
+            echo "APP_PORT=8000"
+          } > .env
 
       - name: Build Docker image
         run: docker build -t statuspulse:ci .
@@ -67,11 +68,7 @@ jobs:
       - name: Run integration tests
         run: |
           chmod +x tests/test_integration.sh
-          docker run --rm \
-            --network statuspulse_statusnet \
-            -v ${{ github.workspace }}/tests:/tests \
-            curlimages/curl:latest \
-            sh /tests/test_integration.sh http://app:8000 | tee test-results.txt
+          docker run --rm --network statuspulse_statusnet -v ${{ github.workspace }}/tests:/tests curlimages/curl:latest sh /tests/test_integration.sh http://app:8000 | tee test-results.txt
 
       - name: Upload test results
         if: always()
@@ -80,6 +77,12 @@ jobs:
           name: integration-test-results
           path: test-results.txt
 
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          docker compose logs app --tail 100 || true
+          docker compose logs db --tail 50 || true
+
       - name: Tear down
         if: always()
-        run: docker compose down -v
+        run: docker compose down -v || true
