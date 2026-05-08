@@ -38,9 +38,17 @@ jobs:
 
       - name: Check  Docker Compose
         run: docker compose version
+      - name: Create .env file
+        run: |
+          echo "DB_NAME=statuspulse" >> .env
+          echo "DB_USER=postgres" >> .env
+          echo "DB_PASSWORD=postgres" >> .env
+          echo "REDIS_PASSWORD=redispass" >> .env
 
       - name: Start Docker Compose
-        run: docker compose up -d
+        run: |
+          docker compose up -d
+          docker compose ps 
 
       - name: Wait for App
         run: sleep 25
