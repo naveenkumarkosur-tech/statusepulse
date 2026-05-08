@@ -35,14 +35,14 @@ jobs:
           failure-threshold: warning
           no-fail: true
 
-      - name: Build Docker Image
-        run: docker build -t statuspulse .
+      - name: Check  Docker Compose
+        run: docker compose version
 
       - name: Start Docker Compose
         run: docker compose up -d
 
       - name: Wait for App
-        run: sleep 15
+        run: sleep 25
 
       - name: Run Integration Tests
         run: |
