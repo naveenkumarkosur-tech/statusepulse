@@ -18,7 +18,7 @@ RUN addgroup -S app && adduser -S -G app -h /app app
 
 WORKDIR /app
 
-RUN apk add --no-cache libpq curl
+RUN apk add --no-cache python3 py3-pip
 
 COPY --from=builder /wheels /wheels
 RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels /root/.cache

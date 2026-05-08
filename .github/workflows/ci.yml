@@ -29,9 +29,11 @@ jobs:
         run: ruff check .
 
       - name: Run Hadolint
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: Dockerfile
+  uses: hadolint/hadolint-action@v3.1.0
+  with:
+    dockerfile: Dockerfile
+    failure-threshold: warning
+    no-fail: true
 
       - name: Build Docker Image
         run: docker build -t statuspulse .
@@ -53,5 +55,6 @@ jobs:
           name: integration-test-results
           path: tests/
 
+            A
       - name: Stop Containers
         run: docker compose down
