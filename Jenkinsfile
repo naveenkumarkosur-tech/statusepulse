@@ -4,9 +4,9 @@ pipeline {
 
     stages {
 
-        stage('Clone') {
+        stage('Checkout') {
             steps {
-                echo 'Source code cloned successfully'
+                echo 'Source code Checkouted successfully'
             }
         }
 
